@@ -1,17 +1,83 @@
 [project]
 name = "fastapi-pilot"
 version = "0.1.0"
-description = "Add your description here"
+description = "The development companion for FastAPI. Not just a starter — a daily driver."
+license = "MIT"
 readme = "README.md"
 authors = [
     { name = "ShubhamPawar-3333", email = "shubham.d.pawar.3333@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "copier>=9.0,<10.0",
+    "questionary>=2.0,<3.0",
+    "tomli-w>=1.0",
+    "typer>=0.24,<1.0",
+]
+keywords = [
+    "fastapi",
+    "cli",
+    "scaffolding",
+    "code-generator",
+    "developer-tools",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+]
 
 [project.scripts]
-fastapi-pilot = "fastapi_pilot:main"
+pilot = "fastapi_pilot.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/ShubhamPawar-3333/fastapi-pilot"
+Repository = "https://github.com/ShubhamPawar-3333/fastapi-pilot"
+Issues = "https://github.com/ShubhamPawar-3333/fastapi-pilot/issues"
+Changelog = "https://github.com/ShubhamPawar-3333/fastapi-pilot/blob/main/CHANGELOG.md"
 
 [build-system]
 requires = ["uv_build>=0.9.26,<0.10.0"]
 build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "mypy>=1.10",
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort (import ordering)
+    "B",      # flake8-bugbear (common bugs)
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade (modernize syntax)
+    "ASYNC",  # flake8-async (async pitfalls)
+]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
