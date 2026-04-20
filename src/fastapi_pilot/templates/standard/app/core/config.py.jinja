@@ -1,0 +1,48 @@
+"""Application configuration loaded from environment variables."""
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    """Application settings — loaded from .env file."""
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+        extra="ignore",
+    )
+
+    # Application
+    PROJECT_NAME: str = "{{ project_name }}"
+    PROJECT_DESCRIPTION: str = "{{ project_description }}"
+    VERSION: str = "0.1.0"
+    API_PREFIX: str = "/api/v1"
+    DEBUG: bool = False
+
+    # CORS
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]
+    {%- if database == "postgresql" %}
+
+    # Database (PostgreSQL + asyncpg)
+    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/{{ project_slug }}"
+    DB_ECHO: bool = False
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    {%- elif database == "sqlite" %}
+
+    # Database (SQLite + aiosqlite)
+    DATABASE_URL: str = "sqlite+aiosqlite:///./{{ project_slug }}.db"
+    DB_ECHO: bool = False
+    {%- endif %}
+
+    # Security
+    SECRET_KEY: str = "change-this-in-production-please"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ALGORITHM: str = "HS256"
+
+
+settings = Settings()
