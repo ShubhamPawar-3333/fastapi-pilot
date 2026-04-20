@@ -1,7 +1,6 @@
 """The `pilot new` command — create a new FastAPI project."""
 
 from pathlib import Path
-from typing import Optional
 
 import questionary
 import typer
@@ -25,12 +24,12 @@ def new_command(
         help="Name of the new project directory.",
     ),
     # Typer.Option = flag. User types: pilot new my-api --db postgresql
-    database: Optional[str] = typer.Option(
+    database: str | None = typer.Option(
         None,
         "--db",
         help=f"Database backend. Choices: {', '.join(SUPPORTED_DATABASES)}",
     ),
-    package_manager: Optional[str] = typer.Option(
+    package_manager: str | None = typer.Option(
         None,
         "--pm",
         help=f"Package manager. Choices: {', '.join(SUPPORTED_PACKAGE_MANAGERS)}",
@@ -55,7 +54,8 @@ def new_command(
     # Don't silently overwrite someone's existing project
     if project_path.exists() and not force:
         console.print(
-            f"[error]Error:[/error] Directory [path]{project_name}[/path] already exists.\n"
+            f"[error]Error:[/error] Directory "
+            f"[path]{project_name}[/path] already exists.\n"
             "  Use [command] --force [/command] to overwrite.",
         )
         raise typer.Exit(code=1)
@@ -64,7 +64,7 @@ def new_command(
     console.print()
     console.print(
         Panel(
-            "[heading]✈  pilot new[/heading]\n\nCreate a new FastAPI project",
+            "[heading]pilot new[/heading]\n\nCreate a new FastAPI project",
             border_style="cyan",
             padding=(1, 2),
         )
@@ -80,20 +80,26 @@ def new_command(
     else:
         # questionary.select shows an arrow-key menu in the terminal
         # .ask() blocks until the user picks one. Returns None if they Ctrl+C.
-        db_choice = database or questionary.select(
-            "Database?",
-            choices=SUPPORTED_DATABASES,
-            default=DEFAULT_DATABASE,
-        ).ask()
+        db_choice = (
+            database
+            or questionary.select(
+                "Database?",
+                choices=SUPPORTED_DATABASES,
+                default=DEFAULT_DATABASE,
+            ).ask()
+        )
 
         if db_choice is None:  # user pressed Ctrl+C
             raise typer.Abort()
 
-        pm_choice = package_manager or questionary.select(
-            "Package manager?",
-            choices=SUPPORTED_PACKAGE_MANAGERS,
-            default=DEFAULT_PACKAGE_MANAGER,
-        ).ask()
+        pm_choice = (
+            package_manager
+            or questionary.select(
+                "Package manager?",
+                choices=SUPPORTED_PACKAGE_MANAGERS,
+                default=DEFAULT_PACKAGE_MANAGER,
+            ).ask()
+        )
 
         if pm_choice is None:
             raise typer.Abort()
@@ -143,15 +149,15 @@ def new_command(
     # ── Success ───────────────────────────────────────────────────────
     console.print()
     console.print(
-        f"[success]✅ Project created at[/success] [path]./{project_name}[/path]"
+        f"[success]Project created at[/success] [path]./{project_name}[/path]"
     )
     console.print()
     console.print(
         Panel(
             f"  cd {project_name}\n"
-            "  make run        → start dev server\n"
-            "  make test       → run tests\n"
-            "  make migrate    → run database migrations",
+            "  make run        - start dev server\n"
+            "  make test       - run tests\n"
+            "  make migrate    - run database migrations",
             title="[bold]Next Steps[/bold]",
             border_style="green",
             padding=(1, 2),

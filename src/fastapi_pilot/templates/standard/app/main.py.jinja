@@ -1,4 +1,4 @@
-"""{{ project_name }} — FastAPI application entry point."""
+"""{{ project_name }} - FastAPI application entry point."""
 
 from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
@@ -18,7 +18,7 @@ from app.middleware.logging import LoggingMiddleware
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    """Application lifespan — startup and shutdown logic."""
+    """Application lifespan - startup and shutdown logic."""
     setup_logging()
     yield
     {%- if database != "none" %}

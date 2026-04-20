@@ -22,4 +22,4 @@ def setup_logging() -> None:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     logger = logging.getLogger("{{ project_slug }}")
-    logger.info("Logging configured — level: %s", logging.getLevelName(log_level))
+    logger.info("Logging configured - level: %s", logging.getLevelName(log_level))

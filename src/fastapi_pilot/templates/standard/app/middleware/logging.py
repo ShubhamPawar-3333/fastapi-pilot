@@ -21,7 +21,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         duration_ms = (time.perf_counter() - start_time) * 1000
 
         logger.info(
-            "%s %s → %d (%.1fms)",
+            "%s %s -> %d (%.1fms)",
             request.method,
             request.url.path,
             response.status_code,
