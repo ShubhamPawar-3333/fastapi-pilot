@@ -1,0 +1,52 @@
+"""{{ project_name }} — FastAPI application entry point."""
+
+from contextlib import asynccontextmanager
+from collections.abc import AsyncGenerator
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import settings
+from app.core.exceptions import register_exception_handlers
+from app.core.logging import setup_logging
+{%- if database != "none" %}
+from app.core.database import engine
+{%- endif %}
+from app.routes.router import api_router
+from app.middleware.logging import LoggingMiddleware
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Application lifespan — startup and shutdown logic."""
+    setup_logging()
+    yield
+    {%- if database != "none" %}
+    await engine.dispose()
+    {%- endif %}
+
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    description=settings.PROJECT_DESCRIPTION,
+    version=settings.VERSION,
+    lifespan=lifespan,
+)
+
+register_exception_handlers(app)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+app.add_middleware(LoggingMiddleware)
+
+# --- pilot:routers ---
+app.include_router(api_router, prefix=settings.API_PREFIX)
+# --- /pilot:routers ---
+
+# --- pilot:middleware ---
+# --- /pilot:middleware ---

@@ -1,0 +1,83 @@
+.PHONY: run test test-cov lint format migrate db-reset clean
+
+run:
+{%- if package_manager == "uv" %}
+	uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+{%- elif package_manager == "poetry" %}
+	poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+{%- else %}
+	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+{%- endif %}
+
+test:
+{%- if package_manager == "uv" %}
+	uv run pytest -v
+{%- elif package_manager == "poetry" %}
+	poetry run pytest -v
+{%- else %}
+	pytest -v
+{%- endif %}
+
+test-cov:
+{%- if package_manager == "uv" %}
+	uv run pytest --cov=app --cov-report=term-missing
+{%- elif package_manager == "poetry" %}
+	poetry run pytest --cov=app --cov-report=term-missing
+{%- else %}
+	pytest --cov=app --cov-report=term-missing
+{%- endif %}
+
+lint:
+{%- if package_manager == "uv" %}
+	uv run ruff check .
+	uv run mypy app/
+{%- elif package_manager == "poetry" %}
+	poetry run ruff check .
+	poetry run mypy app/
+{%- else %}
+	ruff check .
+	mypy app/
+{%- endif %}
+
+format:
+{%- if package_manager == "uv" %}
+	uv run ruff format .
+	uv run ruff check --fix .
+{%- elif package_manager == "poetry" %}
+	poetry run ruff format .
+	poetry run ruff check --fix .
+{%- else %}
+	ruff format .
+	ruff check --fix .
+{%- endif %}
+{%- if database != "none" %}
+
+migrate:
+{%- if package_manager == "uv" %}
+	uv run alembic revision --autogenerate -m "auto"
+	uv run alembic upgrade head
+{%- elif package_manager == "poetry" %}
+	poetry run alembic revision --autogenerate -m "auto"
+	poetry run alembic upgrade head
+{%- else %}
+	alembic revision --autogenerate -m "auto"
+	alembic upgrade head
+{%- endif %}
+
+db-reset:
+{%- if package_manager == "uv" %}
+	uv run alembic downgrade base
+	uv run alembic upgrade head
+{%- elif package_manager == "poetry" %}
+	poetry run alembic downgrade base
+	poetry run alembic upgrade head
+{%- else %}
+	alembic downgrade base
+	alembic upgrade head
+{%- endif %}
+{%- endif %}
+
+clean:
+	find . -type d -name __pycache__ -exec rm -rf {} +
+	find . -type f -name "*.pyc" -delete
+	rm -rf .pytest_cache .mypy_cache htmlcov .coverage dist build
