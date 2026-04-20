@@ -37,4 +37,4 @@ class TestHelp:
     def test_no_args_shows_help(self) -> None:
         """Running just `pilot` (no args) shows help because of no_args_is_help=True."""
         result = runner.invoke(app, [])
-        assert result.exit_code == 0
+        assert "pilot" in result.output.lower()

@@ -22,9 +22,7 @@ class AppException(Exception):
 class NotFoundException(AppException):
     """Resource not found."""
 
-    def __init__(
-        self, resource: str = "Resource", detail: str | None = None
-    ) -> None:
+    def __init__(self, resource: str = "Resource", detail: str | None = None) -> None:
         super().__init__(
             message=f"{resource} not found", status_code=404, detail=detail
         )
@@ -33,9 +31,7 @@ class NotFoundException(AppException):
 class BadRequestException(AppException):
     """Invalid client request."""
 
-    def __init__(
-        self, message: str = "Bad request", detail: str | None = None
-    ) -> None:
+    def __init__(self, message: str = "Bad request", detail: str | None = None) -> None:
         super().__init__(message=message, status_code=400, detail=detail)
 
 
@@ -51,9 +47,7 @@ class UnauthorizedException(AppException):
 class ForbiddenException(AppException):
     """Insufficient permissions."""
 
-    def __init__(
-        self, message: str = "Forbidden", detail: str | None = None
-    ) -> None:
+    def __init__(self, message: str = "Forbidden", detail: str | None = None) -> None:
         super().__init__(message=message, status_code=403, detail=detail)
 
 

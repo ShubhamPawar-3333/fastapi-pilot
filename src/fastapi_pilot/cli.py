@@ -6,10 +6,10 @@ from fastapi_pilot import __version__
 
 app = typer.Typer(
     name="pilot",
-    help="✈ The development companion for FastAPI.",
-    no_args_is_help=True,      # running just `pilot` shows help instead of doing nothing
-    rich_markup_mode="rich",   # allows [bold], [red], etc. in help text
-    add_completion=False,      # don't add shell completion commands (keeps help clean)
+    help="The development companion for FastAPI.",
+    no_args_is_help=True,  # running just `pilot` shows help instead of doing nothing
+    rich_markup_mode="rich",  # allows [bold], [red], etc. in help text
+    add_completion=False,  # don't add shell completion commands (keeps help clean)
 )
 
 
@@ -38,7 +38,7 @@ def main(
         is_eager=True,
     ),
 ) -> None:
-    """✈ The development companion for FastAPI."""
+    """The development companion for FastAPI."""
 
 
 def _register_commands() -> None:

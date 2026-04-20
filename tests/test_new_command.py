@@ -16,7 +16,7 @@ class TestNewCommand:
     def test_creates_project_directory(self, tmp_path: Path) -> None:
         """pilot new creates a project with the correct top-level structure."""
         os.chdir(tmp_path)
-        result = runner.invoke(app, ["new", "test-project", "--no-interactive"])
+        runner.invoke(app, ["new", "test-project", "--no-interactive"])
         project_dir = tmp_path / "test-project"
         assert project_dir.exists()
         assert (project_dir / "app").exists()
