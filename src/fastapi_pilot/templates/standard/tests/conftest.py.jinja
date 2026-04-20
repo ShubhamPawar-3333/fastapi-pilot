@@ -1,0 +1,35 @@
+"""Shared test fixtures for {{ project_name }}."""
+
+from collections.abc import AsyncGenerator
+
+import pytest
+from httpx import ASGITransport, AsyncClient
+
+from app.main import app
+{%- if database != "none" %}
+from app.core.database import Base, engine
+{%- endif %}
+
+
+@pytest.fixture
+async def client() -> AsyncGenerator[AsyncClient, None]:
+    """Async HTTP client for testing API endpoints."""
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        yield ac
+
+{%- if database != "none" %}
+
+
+@pytest.fixture(autouse=True)
+async def setup_database() -> AsyncGenerator[None, None]:
+    """Create tables before each test, drop after."""
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+{%- endif %}
+
+# --- pilot:fixtures ---
+# --- /pilot:fixtures ---

@@ -1,0 +1,116 @@
+# {{ project_name }}
+
+{{ project_description }}
+
+---
+
+## Prerequisites
+
+- Python 3.12+
+{%- if package_manager == "uv" %}
+- [uv](https://docs.astral.sh/uv/) (recommended)
+{%- elif package_manager == "poetry" %}
+- [Poetry](https://python-poetry.org/)
+{%- endif %}
+{%- if database == "postgresql" %}
+- PostgreSQL 15+
+{%- endif %}
+
+## Setup
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd {{ project_name }}
+
+# Copy environment variables
+cp .env.example .env
+# Edit .env with your settings (database URL, secret key, etc.)
+{%- if package_manager == "uv" %}
+
+# Install dependencies
+uv sync
+
+# Run the dev server
+uv run uvicorn app.main:app --reload
+{%- elif package_manager == "poetry" %}
+
+# Install dependencies
+poetry install
+
+# Run the dev server
+poetry run uvicorn app.main:app --reload
+{%- else %}
+
+# Create virtual environment and install
+python -m venv .venv
+source .venv/bin/activate  # or .venv\Scripts\activate on Windows
+pip install -e ".[dev]"
+
+# Run the dev server
+uvicorn app.main:app --reload
+{%- endif %}
+```
+
+The API will be available at [http://localhost:8000](http://localhost:8000).
+Interactive docs at [http://localhost:8000/docs](http://localhost:8000/docs).
+
+## Development
+
+```bash
+make run          # Start dev server with hot reload
+make test         # Run tests
+make test-cov     # Run tests with coverage report
+make lint         # Lint and type check
+make format       # Auto-format code
+{%- if database != "none" %}
+make migrate      # Generate and apply database migrations
+make db-reset     # Reset database (downgrade + upgrade)
+{%- endif %}
+make clean        # Remove caches and build artifacts
+```
+
+## Architecture
+
+```
+{{ project_name }}/
+├── app/
+│   ├── main.py              # FastAPI application entry point
+│   ├── core/
+│   │   ├── config.py        # Settings loaded from .env
+│   │   ├── database.py      # Async SQLAlchemy engine & session
+│   │   ├── security.py      # Password hashing & JWT tokens
+│   │   ├── exceptions.py    # Custom exception hierarchy
+│   │   └── logging.py       # Structured logging setup
+│   ├── models/              # SQLAlchemy table definitions
+│   ├── schemas/             # Pydantic request/response models
+│   ├── routes/              # API route handlers
+│   ├── services/            # Business logic layer
+│   ├── repositories/        # Database query layer
+│   ├── dependencies/        # FastAPI Depends() functions
+│   ├── middleware/           # Custom middleware
+│   └── utils/               # Utility functions
+├── tests/                   # Test suite
+{%- if database != "none" %}
+├── migrations/              # Alembic database migrations
+{%- endif %}
+├── pyproject.toml
+├── Makefile
+└── .env
+```
+
+**Data flow:**
+
+```
+Request → Routes → Services → Repositories → Database
+                      ↕
+                   Schemas (validation)
+```
+
+## License
+
+MIT
+
+---
+
+*Created with [fastapi-pilot](https://github.com/ShubhamPawar-3333/fastapi-pilot)* ✈
