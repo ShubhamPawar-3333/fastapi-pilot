@@ -1,0 +1,48 @@
+project_name:
+  type: str
+  help: "Project name"
+
+project_slug:
+  type: str
+  help: "Python-safe package name"
+  default: "{{ project_name | lower | replace('-', '_') | replace(' ', '_') }}"
+
+project_description:
+  type: str
+  help: "Short project description"
+  default: "A FastAPI project created with pilot"
+
+author_name:
+  type: str
+  help: "Author name"
+  default: "Developer"
+
+author_email:
+  type: str
+  help: "Author email"
+  default: "dev@example.com"
+
+database:
+  type: str
+  help: "Database backend"
+  choices:
+    - postgresql
+    - sqlite
+    - none
+  default: postgresql
+
+package_manager:
+  type: str
+  help: "Package manager"
+  choices:
+    - uv
+    - pip
+    - poetry
+  default: uv
+
+_templates_suffix: ".jinja"
+_answers_file: .copier-answers.yml
+
+_tasks:
+  - command: python -c "from pathlib import Path; src=Path('_gitignore'); src.rename('.gitignore') if src.exists() else None"
+    when: true

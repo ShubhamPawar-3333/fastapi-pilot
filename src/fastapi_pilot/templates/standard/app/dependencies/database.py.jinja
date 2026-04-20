@@ -1,0 +1,26 @@
+"""Database session dependency for FastAPI route injection."""
+{%- if database != "none" %}
+
+from collections.abc import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.database import async_session_factory
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """Yield an async database session.
+
+    Auto-commits on success, rolls back on exception,
+    always closes when the request finishes.
+    """
+    async with async_session_factory() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+{%- else %}
+# No database configured. Use `pilot add` to set up a database.
+{%- endif %}
