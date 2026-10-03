@@ -1,0 +1,48 @@
+"""{{ class_name }} service — business logic for {{ name_plural }}."""
+{% if has_db %}
+from sqlalchemy.ext.asyncio import AsyncSession
+{% endif %}
+from app.core.exceptions import NotFoundException
+from app.repositories.{{ name }} import {{ class_name }}Repository
+from app.schemas.{{ name }} import {{ class_name }}Create, {{ class_name }}Read, {{ class_name }}Update
+
+
+class {{ class_name }}Service:
+    """Business logic layer for {{ name_plural }}.
+
+    Orchestrates between routes and the repository.
+    Add validation, authorization, and business rules here.
+    """
+
+    def __init__(self{% if has_db %}, db: AsyncSession{% endif %}) -> None:
+        self.repo = {{ class_name }}Repository({% if has_db %}db{% endif %})
+
+    async def get_many(self, skip: int = 0, limit: int = 100) -> list[{{ class_name }}Read]:
+        """Get a paginated list of {{ name_plural }}."""
+        items = await self.repo.get_all(skip=skip, limit=limit)
+        return [{{ class_name }}Read.model_validate(item) for item in items]
+
+    async def get_one(self, {{ name }}_id: int) -> {{ class_name }}Read:
+        """Get a single {{ name }} by ID, or raise NotFoundException."""
+        item = await self.repo.get_by_id({{ name }}_id)
+        if not item:
+            raise NotFoundException(resource="{{ class_name }}", detail=f"ID {{'{'}}{{ name }}_id{{'}'}} not found")
+        return {{ class_name }}Read.model_validate(item)
+
+    async def create(self, data: {{ class_name }}Create) -> {{ class_name }}Read:
+        """Create a new {{ name }}."""
+        item = await self.repo.create(data.model_dump())
+        return {{ class_name }}Read.model_validate(item)
+
+    async def update(self, {{ name }}_id: int, data: {{ class_name }}Update) -> {{ class_name }}Read:
+        """Update an existing {{ name }}."""
+        item = await self.repo.update({{ name }}_id, data.model_dump(exclude_unset=True))
+        if not item:
+            raise NotFoundException(resource="{{ class_name }}", detail=f"ID {{'{'}}{{ name }}_id{{'}'}} not found")
+        return {{ class_name }}Read.model_validate(item)
+
+    async def delete(self, {{ name }}_id: int) -> None:
+        """Delete a {{ name }} by ID."""
+        deleted = await self.repo.delete({{ name }}_id)
+        if not deleted:
+            raise NotFoundException(resource="{{ class_name }}", detail=f"ID {{'{'}}{{ name }}_id{{'}'}} not found")

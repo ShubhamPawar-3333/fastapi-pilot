@@ -1,0 +1,66 @@
+"""{{ name }} route — API endpoints for {{ name_plural }}."""
+
+from fastapi import APIRouter{% if has_db %}, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.dependencies.database import get_db{% endif %}
+from app.schemas.{{ name }} import (
+    {{ class_name }}Create,
+    {{ class_name }}Read,
+    {{ class_name }}Update,
+)
+from app.services.{{ name }} import {{ class_name }}Service
+
+router = APIRouter()
+
+
+@router.get("/", summary="List all {{ name_plural }}")
+async def list_{{ name_plural }}(
+    skip: int = 0,
+    limit: int = 100,{% if has_db %}
+    db: AsyncSession = Depends(get_db),{% endif %}
+) -> list[{{ class_name }}Read]:
+    """Retrieve a paginated list of {{ name_plural }}."""
+    service = {{ class_name }}Service({% if has_db %}db{% endif %})
+    return await service.get_many(skip=skip, limit=limit)
+
+
+@router.get("/{{'{'}}{{ name }}_id{{'}'}}", summary="Get {{ name }} by ID")
+async def get_{{ name }}(
+    {{ name }}_id: int,{% if has_db %}
+    db: AsyncSession = Depends(get_db),{% endif %}
+) -> {{ class_name }}Read:
+    """Retrieve a single {{ name }} by its ID."""
+    service = {{ class_name }}Service({% if has_db %}db{% endif %})
+    return await service.get_one({{ name }}_id)
+
+
+@router.post("/", status_code=201, summary="Create {{ name }}")
+async def create_{{ name }}(
+    payload: {{ class_name }}Create,{% if has_db %}
+    db: AsyncSession = Depends(get_db),{% endif %}
+) -> {{ class_name }}Read:
+    """Create a new {{ name }}."""
+    service = {{ class_name }}Service({% if has_db %}db{% endif %})
+    return await service.create(payload)
+
+
+@router.put("/{{'{'}}{{ name }}_id{{'}'}}", summary="Update {{ name }}")
+async def update_{{ name }}(
+    {{ name }}_id: int,
+    payload: {{ class_name }}Update,{% if has_db %}
+    db: AsyncSession = Depends(get_db),{% endif %}
+) -> {{ class_name }}Read:
+    """Update an existing {{ name }}."""
+    service = {{ class_name }}Service({% if has_db %}db{% endif %})
+    return await service.update({{ name }}_id, payload)
+
+
+@router.delete("/{{'{'}}{{ name }}_id{{'}'}}", status_code=204, summary="Delete {{ name }}")
+async def delete_{{ name }}(
+    {{ name }}_id: int,{% if has_db %}
+    db: AsyncSession = Depends(get_db),{% endif %}
+) -> None:
+    """Delete a {{ name }} by its ID."""
+    service = {{ class_name }}Service({% if has_db %}db{% endif %})
+    await service.delete({{ name }}_id)
