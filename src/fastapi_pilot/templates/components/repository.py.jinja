@@ -1,0 +1,113 @@
+"""{{ class_name }} repository — database operations for {{ name_plural }}."""
+{% if has_db %}
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.{{ name }} import {{ class_name }}
+
+
+class {{ class_name }}Repository:
+    """Data access layer for {{ name_plural }}.
+
+    All database queries go here. No business logic —
+    just CRUD operations on the {{ name_plural }} table.
+    """
+
+    def __init__(self, db: AsyncSession) -> None:
+        self.db = db
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> list[{{ class_name }}]:
+        """Get all {{ name_plural }} with pagination."""
+        result = await self.db.execute(
+            select({{ class_name }}).offset(skip).limit(limit)
+        )
+        return list(result.scalars().all())
+
+    async def get_by_id(self, {{ name }}_id: int) -> {{ class_name }} | None:
+        """Get a single {{ name }} by primary key."""
+        return await self.db.get({{ class_name }}, {{ name }}_id)
+
+    async def create(self, data: dict) -> {{ class_name }}:
+        """Insert a new {{ name }} into the database."""
+        instance = {{ class_name }}(**data)
+        self.db.add(instance)
+        await self.db.commit()
+        await self.db.refresh(instance)
+        return instance
+
+    async def update(self, {{ name }}_id: int, data: dict) -> {{ class_name }} | None:
+        """Update an existing {{ name }}. Returns None if not found."""
+        instance = await self.get_by_id({{ name }}_id)
+        if not instance:
+            return None
+        for key, value in data.items():
+            setattr(instance, key, value)
+        await self.db.commit()
+        await self.db.refresh(instance)
+        return instance
+
+    async def delete(self, {{ name }}_id: int) -> bool:
+        """Delete a {{ name }}. Returns True if deleted, False if not found."""
+        instance = await self.get_by_id({{ name }}_id)
+        if not instance:
+            return False
+        await self.db.delete(instance)
+        await self.db.commit()
+        return True
+{% else %}
+
+class {{ class_name }}Repository:
+    """Data access layer for {{ name_plural }}.
+
+    No database configured — this is an in-memory stub.
+    Replace with a real database implementation when ready.
+    """
+
+    def __init__(self) -> None:
+        self._items: list[dict] = []
+        self._next_id = 1
+
+    async def get_all(self, skip: int = 0, limit: int = 100) -> list[dict]:
+        """Get all {{ name_plural }} with pagination."""
+        return self._items[skip : skip + limit]
+
+    async def get_by_id(self, {{ name }}_id: int) -> dict | None:
+        """Get a single {{ name }} by ID."""
+        for item in self._items:
+            if item["id"] == {{ name }}_id:
+                return item
+        return None
+
+    async def create(self, data: dict) -> dict:
+        """Create a new {{ name }}."""
+        from datetime import UTC, datetime
+
+        item = {
+            "id": self._next_id,
+            **data,
+            "created_at": datetime.now(UTC),
+            "updated_at": datetime.now(UTC),
+        }
+        self._next_id += 1
+        self._items.append(item)
+        return item
+
+    async def update(self, {{ name }}_id: int, data: dict) -> dict | None:
+        """Update an existing {{ name }}."""
+        from datetime import UTC, datetime
+
+        item = await self.get_by_id({{ name }}_id)
+        if not item:
+            return None
+        item.update(data)
+        item["updated_at"] = datetime.now(UTC)
+        return item
+
+    async def delete(self, {{ name }}_id: int) -> bool:
+        """Delete a {{ name }}."""
+        item = await self.get_by_id({{ name }}_id)
+        if not item:
+            return False
+        self._items.remove(item)
+        return True
+{% endif %}

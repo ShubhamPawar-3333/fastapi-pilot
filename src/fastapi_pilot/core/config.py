@@ -13,11 +13,14 @@ from pathlib import Path
 PACKAGE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = PACKAGE_DIR / "templates"
 STANDARD_TEMPLATE_DIR = TEMPLATES_DIR / "standard"
+COMPONENT_TEMPLATE_DIR = TEMPLATES_DIR / "components"
+ADDONS_DIR = TEMPLATES_DIR / "addons"
 
 # What options we support (shown in prompts and validated against)
 SUPPORTED_DATABASES = ["postgresql", "sqlite", "none"]
 SUPPORTED_PACKAGE_MANAGERS = ["uv", "pip", "poetry"]
 SUPPORTED_TEMPLATES = ["standard"]
+SUPPORTED_ADDONS = ["docker"]
 
 # What we use when the user doesn't specify or picks --no-interactive
 DEFAULT_DATABASE = "postgresql"

@@ -50,9 +50,13 @@ def _register_commands() -> None:
     By deferring registration to a function call, new.py is only imported
     when this function runs, after cli.py is fully loaded.
     """
+    from fastapi_pilot.commands.add import add_command
+    from fastapi_pilot.commands.db import db_app
     from fastapi_pilot.commands.new import new_command
 
     app.command(name="new", help="Create a new FastAPI project.")(new_command)
+    app.command(name="add", help="Add a component to an existing project.")(add_command)
+    app.add_typer(db_app, name="db", help="Database migration shortcuts.")
 
 
 _register_commands()

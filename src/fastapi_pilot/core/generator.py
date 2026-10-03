@@ -35,6 +35,9 @@ def generate_project(
 
     Steps 2 and 3 are non-fatal - if they fail, the project
     still exists, the user just needs to run them manually.
+
+    If step 1 (template rendering) fails, the partially-created
+    directory is cleaned up to avoid leaving broken projects behind.
     """
     template_data = {
         "project_name": project_name,
@@ -46,9 +49,18 @@ def generate_project(
         "package_manager": package_manager,
     }
 
-    _render_template(STANDARD_TEMPLATE_DIR, project_path, template_data)
+    # Track whether we created the directory so we can clean up on failure
+    created_dir = not project_path.exists()
 
-    # Post-generation hooks
+    try:
+        _render_template(STANDARD_TEMPLATE_DIR, project_path, template_data)
+    except Exception:
+        # Clean up partially-created directory to avoid leaving broken projects
+        if created_dir and project_path.exists():
+            shutil.rmtree(project_path)
+        raise
+
+    # Post-generation hooks (non-fatal)
     _install_dependencies(project_path, package_manager)
     _init_git(project_path)
 

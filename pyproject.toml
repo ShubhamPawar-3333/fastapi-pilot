@@ -1,6 +1,6 @@
 [project]
 name = "fastapi-pilot"
-version = "0.1.0"
+version = "0.2.0"
 description = "The development companion for FastAPI. Not just a starter — a daily driver."
 license = "MIT"
 readme = "README.md"
