@@ -8,13 +8,18 @@ from rich.panel import Panel
 from rich.table import Table
 
 from fastapi_pilot.core.config import (
+    ADDONS_DIR,
     DEFAULT_DATABASE,
     DEFAULT_PACKAGE_MANAGER,
+    SUPPORTED_ADDONS,
     SUPPORTED_DATABASES,
     SUPPORTED_PACKAGE_MANAGERS,
 )
 from fastapi_pilot.core.console import console
 from fastapi_pilot.core.generator import generate_project
+from fastapi_pilot.core.validation import validate_project_name
+
+_ADDONS_HELP = "Optional addons to include. Choices: " + ", ".join(SUPPORTED_ADDONS)
 
 
 def new_command(
@@ -40,6 +45,11 @@ def new_command(
         "--ni",
         help="Skip interactive prompts, use defaults.",
     ),
+    addons: list[str] | None = typer.Option(  # noqa: B008
+        None,
+        "--with",
+        help=_ADDONS_HELP,
+    ),
     force: bool = typer.Option(
         False,
         "--force",
@@ -48,6 +58,12 @@ def new_command(
     ),
 ) -> None:
     """Create a new FastAPI project with production-ready structure."""
+    # ── Validate project name ─────────────────────────────────────────
+    name_error = validate_project_name(project_name)
+    if name_error:
+        console.print(f"[error]Error:[/error] {name_error}")
+        raise typer.Exit(code=1)
+
     project_path = Path.cwd() / project_name
 
     # ── Pre-flight check ──────────────────────────────────────────────
@@ -130,8 +146,22 @@ def new_command(
     table.add_row("Template", "standard")
     table.add_row("Database", db_choice)
     table.add_row("Package Manager", pm_choice)
+    if addons:
+        table.add_row("Addons", ", ".join(addons))
     console.print(table)
     console.print()
+
+    # ── Validate addons ───────────────────────────────────────────────
+    validated_addons: list[str] = []
+    if addons:
+        for addon in addons:
+            if addon not in SUPPORTED_ADDONS:
+                console.print(
+                    f"[error]Unknown addon:[/error] '{addon}'. "
+                    f"Choices: {', '.join(SUPPORTED_ADDONS)}"
+                )
+                raise typer.Exit(code=1)
+            validated_addons.append(addon)
 
     # ── Generate ──────────────────────────────────────────────────────
     with console.status("[info]Creating project...[/info]", spinner="dots"):
@@ -146,21 +176,83 @@ def new_command(
             console.print(f"[error]Generation failed:[/error] {e}")
             raise typer.Exit(code=1) from e
 
+    # ── Generate addons ───────────────────────────────────────────────
+    if validated_addons:
+        _generate_addons(
+            project_path=project_path,
+            project_name=project_name,
+            database=db_choice,
+            addons=validated_addons,
+        )
+
     # ── Success ───────────────────────────────────────────────────────
     console.print()
     console.print(
         f"[success]Project created at[/success] [path]./{project_name}[/path]"
     )
     console.print()
+
+    next_steps = (
+        f"  cd {project_name}\n"
+        "  make run        - start dev server\n"
+        "  make test       - run tests\n"
+        "  make migrate    - run database migrations"
+    )
+    if "docker" in validated_addons:
+        next_steps += "\n  docker compose up - start with Docker"
+
     console.print(
         Panel(
-            f"  cd {project_name}\n"
-            "  make run        - start dev server\n"
-            "  make test       - run tests\n"
-            "  make migrate    - run database migrations",
+            next_steps,
             title="[bold]Next Steps[/bold]",
             border_style="green",
             padding=(1, 2),
         )
     )
     console.print()
+
+
+def _generate_addons(
+    project_path: Path,
+    project_name: str,
+    database: str,
+    addons: list[str],
+) -> None:
+    """Generate addon files into the project directory."""
+    import shutil
+
+    from jinja2 import Environment, FileSystemLoader
+
+    project_slug = project_name.replace("-", "_").replace(" ", "_").lower()
+
+    for addon in addons:
+        addon_dir = ADDONS_DIR / addon
+        if not addon_dir.is_dir():
+            continue
+
+        env = Environment(
+            loader=FileSystemLoader(str(addon_dir)),
+            keep_trailing_newline=True,
+        )
+
+        for source_path in addon_dir.rglob("*"):
+            if source_path.is_dir():
+                continue
+
+            rel_path = source_path.relative_to(addon_dir)
+            filename = rel_path.name
+
+            if filename.endswith(".jinja"):
+                dest = project_path / rel_path.parent / filename.removesuffix(".jinja")
+                template = env.get_template(str(rel_path.as_posix()))
+                rendered = template.render(
+                    project_name=project_name,
+                    project_slug=project_slug,
+                    database=database,
+                )
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_text(rendered, encoding="utf-8")
+            else:
+                dest = project_path / rel_path
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(source_path, dest)
